@@ -51,7 +51,7 @@ export default function Home() {
         <motion.div className="bubble" initial={{ scale: 0, rotate: -6 }} animate={{ scale: 1, rotate: -1.5 }} transition={{ delay: 0.35, type: 'spring', stiffness: 260, damping: 14 }}>
           <i className="boil" />
           <strong>{isTeacher ? `Здравствуйте, ${first}!` : first ? `Привет, ${first}!` : 'Привет!'}</strong>
-          <span>{isTeacher ? 'Загляните в ящик и впишите активности недели для поезда.' : phrase}</span>
+          <span>{isTeacher ? 'Загляните в ящик: там могут быть письма от ребят. Поезд ждёт пятёрок.' : phrase}</span>
         </motion.div>
       </div>
 

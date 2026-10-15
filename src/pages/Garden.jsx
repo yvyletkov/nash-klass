@@ -34,7 +34,7 @@ export default function Garden() {
   const n = deeds?.length ?? 0
   const next = MILESTONES.find((m) => m.n > n)
   const prev = [...MILESTONES].reverse().find((m) => m.n <= n)
-  const mine = deeds?.filter((d) => d.user_id === user.id).length ?? 0
+  const mine = deeds?.filter((d) => d.member_id === user.id).length ?? 0
 
   const placed = useMemo(() => {
     const crowd = n > 80 ? 0.6 : n > 40 ? 0.75 : n > 20 ? 0.9 : 1
@@ -158,7 +158,7 @@ export default function Garden() {
             <h2>«{sel.title}»</h2>
             <p className="who"><b>{sel.profile?.avatar}</b> {sel.profile?.name} · {ago(sel.created_at)}</p>
             <p className="age">{days(sel.created_at) < 1 ? 'Только что посажено' : days(sel.created_at) < 6 ? 'Продолжает расти' : 'Выросло полностью'}</p>
-            {(isTeacher || sel.user_id === user.id) && <button className="link-btn" onClick={() => remove(sel)}>убрать из сада</button>}
+            {(isTeacher || sel.member_id === user.id) && <button className="link-btn" onClick={() => remove(sel)}>убрать из сада</button>}
           </div>
         )}
       </Modal>

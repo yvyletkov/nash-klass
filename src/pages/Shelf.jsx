@@ -105,7 +105,7 @@ export default function Shelf() {
             <Stars n={sel.stars} />
             <p className="review">«{sel.review}»</p>
             <p className="who"><b>{sel.profile?.avatar}</b> советует {sel.profile?.name} · {ago(sel.created_at)}</p>
-            {(isTeacher || sel.user_id === user.id) && (
+            {(isTeacher || sel.member_id === user.id) && (
               <button className="link-btn" onClick={async () => { if (confirm('Убрать книгу с полки?')) { await api.books.remove(sel.id); setBooks((x) => x.filter((b) => b.id !== sel.id)); setSel(null) } }}>убрать с полки</button>
             )}
           </div>

@@ -9,6 +9,7 @@ import { ago } from '../lib/util.js'
 
 const TRACK = 'M120 150 H 790 C 925 150 925 420 790 420 H 210 C 75 420 75 690 210 690 H 880'
 const VB = { w: 1000, h: 800 }
+const fmt = (iso) => new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
 
 export default function Train() {
   const { user, isTeacher } = useAuth()
@@ -27,22 +28,23 @@ export default function Train() {
   const load = useCallback(() => api.train.load().then(setData).catch((e) => setErr(e.message)), [])
   useEffect(() => { load() }, [load])
 
+  const STATIONS = data?.meta.stations?.length ? data.meta.stations : DEFAULT_STATIONS   // маршрут задаёт учитель
+  const LAST = STATIONS.length - 1
+
   // координаты станций вдоль пути
   useEffect(() => {
     const p = pathRef.current
     if (!p) return
     const L = p.getTotalLength()
     lenRef.current = L
-    const n = (data?.meta.rewards?._stations || DEFAULT_STATIONS).length
+    const n = (data?.meta.stations?.length ? data.meta.stations : DEFAULT_STATIONS).length
     setPts(Array.from({ length: n }, (_, i) => { const q = p.getPointAtLength((L * i) / (n - 1)); return { x: q.x, y: q.y } }))
-  }, [!!data, data?.meta.rewards?._stations?.length])
+  }, [!!data, data?.meta.stations?.length])
 
   /*
    Логика недели: паровоз едет только на дровах (пятёрках). Набрали норму — доехали до следующей станции
-   и открыли бонус (активности + награда). Не успели — учитель может «дотолкать» поезд, но без бонуса.
+   и получили награду. Не успели — учитель может «дотолкать» поезд, но без награды.
   */
-  const STATIONS = data?.meta.rewards?._stations || DEFAULT_STATIONS   // маршрут задаёт учитель
-  const LAST = STATIONS.length - 1
   const idx = data?.meta.station_idx ?? 0                      // станция, с которой начался текущий перегон
   const finished = idx >= LAST
   const fivesGoal = data?.meta.fives_goal ?? GOALS.fives
@@ -50,10 +52,11 @@ export default function Train() {
   const p = Math.min(1, fives / fivesGoal)
   const arrived = !finished && p >= 1                           // дрова набраны — поезд прибыл
   const cur = finished ? LAST : arrived ? idx + 1 : idx         // где сейчас стоит поезд
-  const pushed = data?.meta.rewards?._pushed || []              // станции, до которых «дотолкали» без бонуса
+  const legs = data?.legs || []
+  const pushed = legs.filter((l) => l.pushed).map((l) => l.idx) // станции, до которых «дотолкали» без награды
   const target = finished || LAST < 1 ? 1 : (idx + p) / LAST
   const rewardOf = (i) => STATIONS[i]?.reward || 'Награду пока не придумали'
-  const saveStations = (list) => act(() => api.train.setReward({ ...(data.meta.rewards || {}), _stations: list }))
+  const saveStations = (list) => act(() => api.train.saveStations(list))
 
   // движение поезда
   useEffect(() => {
@@ -85,13 +88,11 @@ export default function Train() {
   }
 
   const addFive = () => act(() => api.train.addFive(idx, subject), () => setBoom((b) => b + 1))
-  const nextLeg = () => act(() => api.train.advance(idx + 1))
+  const arrive = (isPush) => act(() => api.train.arrive({ idx, station: STATIONS[idx + 1], pushed: isPush, fives_total: fives }))
+  const nextLeg = () => arrive(false)
   const push = () => {
-    if (!confirm(`Дров не хватило (${fives} из ${fivesGoal}). Дотолкать поезд до станции «${STATIONS[idx + 1].name}»? Бонус за неё класс не получит.`)) return
-    act(async () => {
-      await api.train.setReward({ ...(data.meta.rewards || {}), _pushed: [...pushed, idx + 1] })
-      await api.train.advance(idx + 1)
-    })
+    if (!confirm(`Дров не хватило (${fives} из ${fivesGoal}). Дотолкать поезд до станции «${STATIONS[idx + 1].name}»? Награду за неё класс не получит.`)) return
+    arrive(true)
   }
 
   const nextSt = STATIONS[Math.min(idx + 1, LAST)]
@@ -99,7 +100,7 @@ export default function Train() {
   return (
     <div className="train-page">
       <div className="head-row">
-        <Title color={C.sky} sub="Одна станция — одна неделя. Паровоз едет только на дровах: набираем пятёрки. Хватило дров — приехали и открыли бонус. Не хватило — учитель может дотолкать поезд, но бонуса не будет.">Поезд класса</Title>
+        <Title color={C.sky} sub="Одна станция — одна неделя. Паровоз едет только на дровах: набираем пятёрки. Хватило дров — приехали и получили награду. Не хватило — учитель может дотолкать поезд, но без награды.">Поезд класса</Title>
       </div>
 
       {!data ? <p className="soft center">Загружаем маршрут…</p> : (
@@ -121,12 +122,12 @@ export default function Train() {
 
             {pts && pts.length === STATIONS.length && STATIONS.map((s, i) => (
               <button
-                key={s.name}
+                key={i}
                 className={`station ${i < cur ? 'passed' : i === cur ? 'now' : 'future'} ${pushed.includes(i) && i <= cur ? 'pushed' : ''} ${i > 4 && i < 8 ? 'lbl-up' : ''}`}
                 style={{ left: `${(pts[i].x / VB.w) * 100}%`, top: `${(pts[i].y / VB.h) * 100}%` }}
                 onClick={() => setInfo(i)}
               >
-                <span className="dot boil"><b>{i < cur ? (pushed.includes(i) ? '↷' : '✓') : s.emoji}</b></span>
+                <span className="dot boil"><b>{i < cur ? (pushed.includes(i) ? '»' : '✓') : s.emoji}</b></span>
                 <span className="lbl">{s.name}</span>
               </button>
             ))}
@@ -163,7 +164,7 @@ export default function Train() {
                 {data.fives.slice(0, 7).map((f) => (
                   <li key={f.id}>
                     <b>{f.profile?.avatar}</b> <span>{f.profile?.name}{f.count > 1 ? ` +${f.count}` : ''}</span> <em>{f.subject}</em> <small>{ago(f.created_at)}</small>
-                    {(isTeacher || f.user_id === user.id) && <button className="x" onClick={() => act(() => api.train.removeFive(f.id))} title="Убрать">✕</button>}
+                    {(isTeacher || f.member_id === user.id) && <button className="x" onClick={() => act(() => api.train.removeFive(f.id))} title="Убрать">✕</button>}
                   </li>
                 ))}
                 {data.fives.length === 0 && <li className="soft">Пока ни одной пятёрки на этой неделе. Кто первый?</li>}
@@ -171,15 +172,27 @@ export default function Train() {
             </Card>
 
             <Card color="#e3f0ff" tilt={0.4} className={`gauge-card bonus ${arrived ? 'open' : 'locked'}`}>
-              <h2>Бонус станции «{nextSt.name}»</h2>
-              <div className="bonus-prize">
-                <small>Награда</small>
+              <h2>Награда станции «{nextSt.name}»</h2>
+              <div className="bonus-prize big">
+                <span className="big-emoji">{nextSt.emoji}</span>
                 <p>{rewardOf(Math.min(idx + 1, LAST))}</p>
               </div>
-              {isTeacher && <Btn color={C.sun} onClick={() => setEditor(true)}>Редактировать маршрут</Btn>}
-              <h3>Активности недели</h3>
-              <TaskList data={data} idx={idx} isTeacher={isTeacher} act={act} unlocked={arrived} />
-              {!arrived && !finished && <p className="lock-note">Бонус откроется, когда поезд доедет до станции на своих дровах.</p>}
+              {!arrived && !finished && <p className="lock-note">Награда достанется классу, если поезд доедет до станции на своих дровах.</p>}
+              {arrived && <p className="full">Награда получена!</p>}
+              {isTeacher && <div className="row"><Btn color={C.sun} onClick={() => setEditor(true)}>Редактировать маршрут</Btn></div>}
+
+              <h3>Бортовой журнал</h3>
+              <ol className="journal">
+                {[...legs].reverse().map((l) => (
+                  <li key={l.id} className={l.pushed ? 'pushed' : ''}>
+                    <span className="d">{fmt(l.arrived_at)}</span>
+                    <span className="e">{l.station_emoji}</span>
+                    <span className="t"><b>{l.station_name}</b>{l.pushed ? ' — дотолкали, без награды' : l.reward ? ` — ${l.reward}` : ''}</span>
+                    <small>{l.fives_total} 🔥</small>
+                  </li>
+                ))}
+                {legs.length === 0 && <li className="soft">Поезд ещё не доехал ни до одной станции.</li>}
+              </ol>
             </Card>
           </div>
 
@@ -192,10 +205,10 @@ export default function Train() {
               </div>
             </div>
             <div className="st-actions">
-              {isTeacher && arrived && <Btn color={C.mint} onClick={nextLeg}>Бонус получен — едем дальше</Btn>}
+              {isTeacher && arrived && <Btn color={C.mint} onClick={nextLeg}>Награда получена — едем дальше</Btn>}
               {isTeacher && finished && <Btn color={C.sun} onClick={() => setEditor(true)}>Добавить новую станцию</Btn>}
-              {isTeacher && !arrived && !finished && <Btn color="#f3ead9" onClick={push}>Дотолкать (без бонуса)</Btn>}
-              {!isTeacher && arrived && <p className="full">Бонус открыт! Учитель отправит поезд дальше.</p>}
+              {isTeacher && !arrived && !finished && <Btn color="#f3ead9" onClick={push}>Дотолкать (без награды)</Btn>}
+              {!isTeacher && arrived && <p className="full">Награда открыта! Учитель отправит поезд дальше.</p>}
               {!isTeacher && !arrived && !finished && <p className="soft">До станции «{nextSt.name}» не хватает {Math.max(0, fivesGoal - fives)} {fivesGoal - fives === 1 ? 'пятёрки' : 'пятёрок'}.</p>}
               {finished && <p className="full">Конечная станция! {isTeacher ? 'Можно добавить новые станции в маршрут.' : 'Ждём продолжения маршрута.'}</p>}
             </div>
@@ -213,7 +226,7 @@ export default function Train() {
           <div className="station-info">
             <span className="big-emoji">{STATIONS[info].emoji}</span>
             <h2>Станция {info + 1}: «{STATIONS[info].name}»</h2>
-            <p>{info === 0 ? 'Отсюда мы стартовали.' : info < cur ? (pushed.includes(info) ? 'Мы сюда дотолкали поезд, бонус не получен.' : 'Приехали на своих дровах — бонус получен.') : info === cur ? 'Поезд сейчас здесь.' : 'Впереди.'}</p>
+            <p>{info === 0 ? 'Отсюда мы стартовали.' : info < cur ? (pushed.includes(info) ? 'Мы сюда дотолкали поезд, награда не получена.' : 'Приехали на своих дровах — награда получена.') : info === cur ? 'Поезд сейчас здесь.' : 'Впереди.'}</p>
             {info > 0 && <div className="st-prize"><small>Награда за станцию</small><p>{rewardOf(info)}</p></div>}
           </div>
         )}
@@ -282,42 +295,6 @@ function TeacherFives({ idx, act }) {
         <Btn color={C.mint} onClick={() => act(() => api.train.addFive(idx, what || 'Пятёрки класса', n), () => setWhat(''))}>+ {n}</Btn>
       </div>
     </div>
-  )
-}
-
-function TaskList({ data, idx, isTeacher, act, unlocked }) {
-  const [t, setT] = useState('')
-  return (
-    <div className="tasks">
-      <ul>
-        {data.tasks.map((k) => (
-          <li key={k.id} className={k.done ? 'done' : ''}>
-            <button className={`check ${k.done ? 'on' : ''}`} disabled={!isTeacher || !unlocked} onClick={() => act(() => api.train.toggleTask(k.id, !k.done))} aria-label="выполнено">
-              <i className="boil" />{k.done && <b>✓</b>}
-            </button>
-            <span>{k.title}</span>
-            {isTeacher && <button className="x" onClick={() => act(() => api.train.removeTask(k.id))}>✕</button>}
-          </li>
-        ))}
-        {data.tasks.length === 0 && <li className="soft">Учитель ещё не вписал активности на эту неделю.</li>}
-      </ul>
-      {isTeacher && (
-        <form className="row" onSubmit={(e) => { e.preventDefault(); if (t.trim()) act(() => api.train.addTask(idx, t.trim()), () => setT('')) }}>
-          <input value={t} onChange={(e) => setT(e.target.value)} placeholder="Новая активность, например: поход в музей" />
-          <Btn color={C.sky} type="submit">Добавить</Btn>
-        </form>
-      )}
-    </div>
-  )
-}
-
-function RewardEdit({ value, onSave }) {
-  const [v, setV] = useState(value)
-  return (
-    <form className="row" onSubmit={(e) => { e.preventDefault(); onSave(v) }}>
-      <input value={v} onChange={(e) => setV(e.target.value)} />
-      <Btn color={C.sun} type="submit">Сохранить награду</Btn>
-    </form>
   )
 }
 

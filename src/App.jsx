@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { api, DEMO } from './lib/api.js'
 import { SketchDefs, useBoil } from './art/sketch.jsx'
 import Mascot from './art/Mascot.jsx'
-import Login from './pages/Login.jsx'
+import Landing from './pages/Landing.jsx'
+import Join from './pages/Join.jsx'
+import Settings from './pages/Settings.jsx'
 import Home from './pages/Home.jsx'
 import Garden from './pages/Garden.jsx'
 import Shelf from './pages/Shelf.jsx'
@@ -16,24 +18,29 @@ export const useAuth = () => useContext(AuthCtx)
 
 export default function App() {
   useBoil()
-  const [user, setUser] = useState(undefined) // undefined — ещё грузим
+  const [sess, setSess] = useState(undefined) // undefined — ещё грузим; null — не вошли; {member, class}
   const loc = useLocation()
-  const nav = useNavigate()
 
   useEffect(() => {
-    api.me().then((u) => setUser(u || null)).catch(() => setUser(null))
+    api.session().then((s) => setSess(s || null)).catch(() => setSess(null))
   }, [])
 
+  const user = sess?.member
+  const klass = sess?.class
   const auth = {
-    user,
+    user, klass,
     isTeacher: user?.role === 'teacher',
-    signIn: async (l, p) => { const u = await api.signIn(l, p); setUser(u); return u },
-    signOut: async () => { await api.signOut(); setUser(null); nav('/login') },
+    signIn: async (l, p) => setSess(await api.signIn(l, p)),
+    createClass: async (f) => setSess(await api.createClass(f)),
+    register: async (f) => setSess(await api.register(f)),
+    refresh: async () => setSess(await api.session()),
+    signOut: async () => { await api.signOut(); setSess(null) },
   }
 
-  if (user === undefined) return <><SketchDefs /><div className="boot"><Mascot size={120} mood="sleepy" /></div></>
+  if (sess === undefined) return <><SketchDefs /><div className="boot"><Mascot size={120} mood="sleepy" /></div></>
 
-  const gate = (el) => (user ? el : <Navigate to="/login" replace />)
+  const gate = (el) => (user ? el : <Navigate to="/" replace />)
+  const teacherOnly = (el) => (user?.role === 'teacher' ? el : <Navigate to="/" replace />)
 
   return (
     <AuthCtx.Provider value={auth}>
@@ -43,29 +50,30 @@ export default function App() {
       <AnimatePresence mode="wait">
         <motion.main key={loc.pathname} className="page" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }}>
           <Routes location={loc}>
-            <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-            <Route path="/" element={gate(<Home />)} />
+            <Route path="/" element={user ? <Home /> : <Landing />} />
+            <Route path="/c/:slug" element={<Join />} />
             <Route path="/garden" element={gate(<Garden />)} />
             <Route path="/shelf" element={gate(<Shelf />)} />
             <Route path="/train" element={gate(<Train />)} />
             <Route path="/box" element={gate(<Box />)} />
+            <Route path="/class" element={teacherOnly(<Settings />)} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.main>
       </AnimatePresence>
-      <footer className="foot">6 класс · Гимназия №70 · сделано с любовью 🧡</footer>
+      <footer className="foot">{klass ? `${klass.name} · ${klass.school}` : 'Наш класс'}</footer>
     </AuthCtx.Provider>
   )
 }
 
 function Header() {
-  const { user, signOut, isTeacher } = useAuth()
+  const { user, klass, signOut, isTeacher } = useAuth()
   const loc = useLocation()
   return (
     <header className="top">
       <Link to="/" className="brand">
         <Mascot size={46} flap={false} />
-        <span>Наш класс</span>
+        <span>Наш класс<small>{klass.name} · {klass.school}</small></span>
       </Link>
       <nav className="tabs">
         {[['/garden', '🌳', 'Сад'], ['/shelf', '📚', 'Полка'], ['/train', '🚂', 'Поезд'], ['/box', '💌', 'Ящик']].map(([to, e, t]) => (
@@ -73,6 +81,7 @@ function Header() {
         ))}
       </nav>
       <div className="me">
+        {isTeacher && <Link to="/class" className={`gear ${loc.pathname === '/class' ? 'on' : ''}`} title="Настройки класса">⚙</Link>}
         <span className="me-chip"><b>{user.avatar}</b> <span>{isTeacher ? 'Учитель' : user.name}</span></span>
         <button className="link-btn" onClick={signOut}>выйти</button>
       </div>

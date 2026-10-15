@@ -328,3 +328,32 @@ input:focus, textarea:focus, select:focus { box-shadow: 4px 4px 0 var(--sky); tr
 .route-editor select { padding: 6px 4px; font-size: 20px; }
 .route-editor input:disabled { background: #eee; }
 @media (max-width: 640px) { .route-editor li { grid-template-columns: 26px 60px 1fr; } .route-editor li input:last-child { grid-column: 2 / 4; } }
+
+/* ---------- Класс: вход, регистрация, настройки ---------- */
+.brand span small { display: block; font-family: 'Neucha', sans-serif; font-size: 12px; line-height: 1; opacity: .65; margin-top: 1px; letter-spacing: .2px; }
+.landing { min-height: calc(100vh - 120px); display: flex; flex-direction: column; align-items: center; position: relative; padding-top: 18px; gap: 16px; }
+.land-hero { display: flex; align-items: center; gap: 20px; max-width: 760px; z-index: 2; }
+.land-hero .logo { text-align: left; margin: 0; } .land-sub { font-size: 19px; opacity: .8; max-width: 540px; } .small-top { font-size: 15px; opacity: .6; margin-bottom: -2px; }
+.land-card { width: min(560px, 100%); display: flex; flex-direction: column; gap: 22px; z-index: 2; }
+@media (max-width: 640px) { .land-hero { flex-direction: column; text-align: center; } .land-hero .logo { text-align: center; } }
+.seg { display: flex; gap: 6px; margin-bottom: 8px; }
+.seg button { flex: 1; font-family: 'Caveat'; font-size: 26px; font-weight: 700; background: transparent; border: 3px solid transparent; border-radius: 10px; padding: 2px 8px; opacity: .55; }
+.seg button.on { opacity: 1; border-color: var(--ink); background: var(--sun); box-shadow: 2px 3px 0 var(--ink); }
+.login-card h2 { font-size: 34px; margin-bottom: 2px; }
+.fine-dark { font-size: 14px; opacity: .65; margin-top: 10px; }
+.demo-card p { margin-top: 4px; } .demo-card code { background: #fff; border: 2px solid var(--ink); border-radius: 6px; padding: 0 6px; }
+.demo-card a { color: var(--ink); font-weight: 700; }
+.settings .set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.set-card.wide { grid-column: 1 / -1; } .set-card h2 { margin-bottom: 2px; } .set-card input, .set-card textarea { margin-top: 8px; }
+@media (max-width: 860px) { .settings .set-grid { grid-template-columns: 1fr; } }
+.ok-msg { color: #1b7a4a; font-weight: 700; margin: 4px 0 12px; }
+.roster { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 20px; }
+.roster li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 2px dashed rgba(42, 33, 64, .2); } .roster li b { font-size: 22px; } .roster li span { flex: 1; }
+.roster em { font-style: normal; font-size: 13px; padding: 0 8px; border-radius: 8px; border: 2px solid var(--ink); } .roster em.wait { background: #ffe9a8; } .roster em.done { background: #d6f8cf; }
+.gear { font-size: 24px; text-decoration: none; color: var(--ink); padding: 0 6px; border-radius: 10px; transition: transform .3s; } .gear:hover { transform: rotate(60deg); } .gear.on { background: var(--sun); border: 2px solid var(--ink); }
+.bonus-prize.big { display: flex; gap: 14px; align-items: center; background: #fff; } .bonus-prize.big p { font-size: 22px; font-family: 'Caveat'; font-weight: 700; line-height: 1.1; }
+.bonus-prize.big .big-emoji { font-size: 44px; }
+.bonus.locked .bonus-prize { opacity: .85; filter: none; }
+.journal { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; max-height: 340px; overflow-y: auto; }
+.journal li { display: grid; grid-template-columns: 78px 26px 1fr auto; gap: 8px; align-items: baseline; padding: 6px 0; border-bottom: 2px dashed rgba(42, 33, 64, .2); font-size: 15px; }
+.journal .d { opacity: .6; font-size: 14px; } .journal .e { font-size: 18px; } .journal li.pushed .t { opacity: .7; } .journal li.pushed .e::after { content: ''; } .journal small { opacity: .6; white-space: nowrap; }

@@ -26,7 +26,7 @@ export default function Home() {
         deeds: d.value?.length, books: b.value?.length,
         train: t.value && {
           idx: t.value.meta.station_idx,
-          names: (t.value.meta.rewards?._stations || STATIONS).map((x) => x.name),
+          names: (t.value.meta.stations || STATIONS).map((x) => x.name),
           fives: t.value.fives.reduce((a, f) => a + f.count, 0),
         },
         box: w.value && (isTeacher

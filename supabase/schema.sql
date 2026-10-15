@@ -154,6 +154,13 @@ begin
   if not is_teacher() then raise exception 'only teacher'; end if;
   update classes set school = trim(p_school), name = trim(p_name) where id = my_class();
 end $$;
+create or replace function teacher_rename(p_name text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not is_teacher() then raise exception 'only teacher'; end if;
+  if char_length(trim(coalesce(p_name, ''))) < 2 then raise exception 'Введите имя'; end if;
+  update members set name = trim(p_name) where user_id = auth.uid() and role = 'teacher';
+end $$;
 create or replace function change_class_password(p_new text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
@@ -325,7 +332,7 @@ $$;
 revoke all on all functions in schema public from public, anon, authenticated;
 grant execute on function class_info(text, text) to anon, authenticated;
 grant execute on function create_class(text, text, text, text, jsonb), join_class(text, text, uuid, text), my_profile(),
-  class_update(text, text), change_class_password(text), roster_add(text[]), member_remove(uuid),
+  class_update(text, text), teacher_rename(text), change_class_password(text), roster_add(text[]), member_remove(uuid),
   teacher_inbox(), teacher_reply(uuid, text), class_roster(), my_member(), my_class(), is_teacher() to authenticated;
 revoke all on all tables in schema public from anon;
 revoke all on classes, class_fail from authenticated;

@@ -42,7 +42,7 @@ declare
   v_class  text := '6А';
   v_slug   text := '6a';
 
-  h jsonb := $json$${JSON.stringify(data)}$json$::jsonb;
+  h jsonb := $json$${JSON.stringify(data).replace(/[\u0080-\uffff]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'))}$json$::jsonb;
   v_email text; v_uid uuid := gen_random_uuid(); v_cid uuid; v_ghost uuid; v_teacher uuid; i int;
   ids uuid[] := '{}'; r jsonb; mid uuid;
 begin

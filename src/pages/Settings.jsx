@@ -4,11 +4,12 @@ import { useAuth } from '../App.jsx'
 import { Card, Btn, Title, C } from '../art/sketch.jsx'
 
 export default function Settings() {
-  const { klass, refresh } = useAuth()
+  const { klass, user, refresh } = useAuth()
   const [members, setMembers] = useState([])
   const [school, setSchool] = useState(klass.school)
   const [name, setName] = useState(klass.name)
   const [pw, setPw] = useState('')
+  const [tname, setTname] = useState(user.name)
   const [names, setNames] = useState('')
   const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
@@ -42,6 +43,15 @@ export default function Settings() {
           <form className="row" onSubmit={(e) => { e.preventDefault(); run(() => api.teacher.changePassword(pw), 'Пароль класса изменён').then(() => setPw('')) }}>
             <input value={pw} onChange={(e) => setPw(e.target.value)} placeholder="новый пароль класса" />
             <Btn color={C.sun} type="submit" disabled={pw.length < 4}>Сменить</Btn>
+          </form>
+        </Card>
+
+        <Card color="#f1e6ff" className="set-card">
+          <h2>Ваше имя</h2>
+          <p className="soft small">Так вас видят ученики и вы сами в шапке сайта.</p>
+          <form className="row" onSubmit={(e) => { e.preventDefault(); run(() => api.teacher.rename(tname), 'Имя сохранено') }}>
+            <input value={tname} onChange={(e) => setTname(e.target.value)} maxLength={60} placeholder="Фамилия И.О." />
+            <Btn color={C.grape} type="submit" disabled={tname.trim().length < 2 || tname.trim() === user.name}>Сохранить</Btn>
           </form>
         </Card>
 

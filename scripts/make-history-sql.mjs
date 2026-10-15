@@ -20,7 +20,7 @@ const sql = `-- История «с 1 сентября» для класса ${s
 do $hist$
 declare
   v_slug text := '${slug}';
-  h jsonb := $json$${JSON.stringify(data)}$json$::jsonb;
+  h jsonb := $json$${JSON.stringify(data).replace(/[\u0080-\uffff]/g, (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'))}$json$::jsonb;
   v_cid uuid; v_teacher uuid; v_ghost uuid; ids uuid[] := '{}'; mid uuid; i int; r jsonb;
 begin
   select id into v_cid from classes where slug = v_slug;

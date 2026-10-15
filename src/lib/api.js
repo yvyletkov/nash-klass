@@ -65,6 +65,7 @@ function makeSupabase() {
     teacher: {
       updateClass: async (school, name) => must(await sb.rpc('class_update', { p_school: school, p_name: name })),
       changePassword: async (pw) => must(await sb.rpc('change_class_password', { p_new: pw })),
+      rename: async (name) => must(await sb.rpc('teacher_rename', { p_name: name })),
       rosterAdd: async (names) => must(await sb.rpc('roster_add', { p_names: names })),
       memberRemove: async (id) => must(await sb.rpc('member_remove', { p_member: id })),
     },
@@ -213,6 +214,7 @@ function makeDemo() {
 
     teacher: {
       async updateClass(school, name) { const e = needTeacher(); if (e) return e; Object.assign(klass(), { school: school.trim(), name: name.trim() }); save() },
+      async rename(name) { const e = needTeacher(); if (e) return e; if (name.trim().length < 2) return fail('Введите имя'); meM().name = name.trim(); save() },
       async changePassword(pw) { const e = needTeacher(); if (e) return e; if (pw.length < 4) return fail('Пароль класса — минимум 4 символа'); klass().password = pw; save() },
       async rosterAdd(names) { const e = needTeacher(); if (e) return e; names.filter((n) => n.trim().length >= 2).forEach((n) => db.members.push({ id: 'm-' + uid(), class_id: klass().id, user: null, name: n.trim(), role: 'student', avatar: '🙂' })); save() },
       async memberRemove(id) { const e = needTeacher(); if (e) return e; db.members = db.members.filter((m) => !(m.id === id && m.role === 'student' && m.class_id === klass().id)); save() },

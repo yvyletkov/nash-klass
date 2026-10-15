@@ -82,7 +82,7 @@ function Header() {
       </nav>
       <div className="me">
         {isTeacher && <Link to="/class" className={`gear ${loc.pathname === '/class' ? 'on' : ''}`} title="Настройки класса">⚙</Link>}
-        <span className="me-chip"><b>{user.avatar}</b> <span>{isTeacher ? 'Учитель' : user.name}</span></span>
+        <span className="me-chip"><b>{user.avatar}</b> <span>{user.name}</span></span>
         <button className="link-btn" onClick={signOut}>выйти</button>
       </div>
     </header>

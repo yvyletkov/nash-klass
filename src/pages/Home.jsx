@@ -37,7 +37,7 @@ export default function Home() {
     return () => { off = true }
   }, [isTeacher])
 
-  const first = isTeacher ? '' : (user.name.split(' ')[0] || '')
+  const first = isTeacher ? user.name : (user.name.split(' ')[1] || user.name.split(' ')[0] || '')
   const place = s.train ? { name: s.train.names[Math.min(s.train.idx, s.train.names.length - 1)] } : null
 
   return (
@@ -50,7 +50,7 @@ export default function Home() {
         <Mascot size={104} mood="happy" />
         <motion.div className="bubble" initial={{ scale: 0, rotate: -6 }} animate={{ scale: 1, rotate: -1.5 }} transition={{ delay: 0.35, type: 'spring', stiffness: 260, damping: 14 }}>
           <i className="boil" />
-          <strong>{first ? `Привет, ${first}!` : 'Здравствуйте!'}</strong>
+          <strong>{isTeacher ? `Здравствуйте, ${first}!` : first ? `Привет, ${first}!` : 'Привет!'}</strong>
           <span>{isTeacher ? 'Загляните в ящик и впишите активности недели для поезда.' : phrase}</span>
         </motion.div>
       </div>

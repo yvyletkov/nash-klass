@@ -24,14 +24,9 @@ npm run dev
 2. **SQL Editor** → вставьте весь `supabase/schema.sql` → Run.
 3. **Authentication → Providers → Email**: выключите «Confirm email». Там же (Sign In / Providers) оставьте регистрацию включённой.
 4. **Project Settings → API**: скопируйте `Project URL` и `anon public` key → в `.env.local` (по образцу `.env.example`) и в `./scripts/deploy.sh` они подхватятся сами.
-5. Предзаполненный класс 6А «с 1 сентября» (необязательно):
-   ```bash
-   SUPABASE_URL=… SUPABASE_SERVICE_KEY=<service_role key> \
-   TEACHER_LOGIN=… TEACHER_PASSWORD=… CLASS_PASSWORD=… \
-   node scripts/seed.mjs
-   ```
+5. Предзаполненный класс 6А «с 1 сентября»: `node scripts/make-seed-sql.mjs` создаёт `supabase/seed_6a.sql`.
+   Вставьте его в SQL Editor, впишите в начале логин учителя, пароль учителя и пароль класса, нажмите Run (секретные ключи не нужны, можно запускать повторно).
    Список учеников — в `scripts/roster.txt` (по одному на строку, в git не попадает); без него возьмутся вымышленные имена.
-   Ключ `service_role` секретный: используйте только в этой команде.
 
 ## Публикация на GitHub Pages
 Сайт лежит в ветке `gh-pages`. Обновить после изменений: `./scripts/deploy.sh` (ключи Supabase берутся из `.env.local`).

@@ -5,3 +5,4 @@ dist
 scripts/roster.txt
 supabase/seed_6a.sql
 scripts/credentials.txt
+supabase/history.sql

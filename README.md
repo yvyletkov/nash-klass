@@ -23,10 +23,10 @@ npm run dev
    Логины/пароли окажутся в `scripts/credentials.csv` — раздайте детям. Ключ `service_role` секретный, никуда его не публикуйте.
 
 ## Публикация на GitHub Pages
-1. Залейте код в репозиторий (ветка `main`).
-2. Settings → Pages → Source: **GitHub Actions**.
-3. Settings → Secrets and variables → Actions → **Variables**: `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY`.
-4. Каждый push в `main` публикует сайт автоматически.
+Сайт лежит в ветке `gh-pages`: `Settings → Pages → Deploy from a branch → gh-pages`.
+Обновить сайт после изменений: `./scripts/deploy.sh` (ключи Supabase берутся из `.env.local`).
+Если захотите авто-публикацию при каждом push — готовый workflow лежит в `docs/deploy.yml.example`
+(перенесите в `.github/workflows/deploy.yml`; для пуша такого файла нужен токен со scope `workflow`).
 
 ## Как устроена анонимность ящика
 Таблица `worries` читается только её автором (RLS). Учитель получает письма через функцию

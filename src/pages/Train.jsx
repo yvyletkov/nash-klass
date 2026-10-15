@@ -36,36 +36,41 @@ export default function Train() {
     setPts(STATIONS.map((_, i) => { const q = p.getPointAtLength((L * i) / LAST); return { x: q.x, y: q.y } }))
   }, [!!data])
 
-  const idx = data?.meta.station_idx ?? 0
+  /*
+   Логика недели: паровоз едет только на дровах (пятёрках). Набрали норму — доехали до следующей станции
+   и открыли бонус (активности + награда). Не успели — учитель может «дотолкать» поезд, но без бонуса.
+  */
+  const idx = data?.meta.station_idx ?? 0                      // станция, с которой начался текущий перегон
+  const finished = idx >= LAST
   const fivesGoal = data?.meta.fives_goal ?? GOALS.fives
-  const actsGoal = data?.meta.acts_goal ?? GOALS.acts
   const fives = data?.fives.reduce((a, f) => a + f.count, 0) ?? 0
-  const acts = data?.tasks.filter((t) => t.done).length ?? 0
-  const pF = Math.min(1, fives / fivesGoal)
-  const pA = Math.min(1, acts / actsGoal)
-  const ready = pF >= 1 && pA >= 1
-  const progress = (pF + pA) / 2
-  const target = idx >= LAST ? 1 : (idx + 0.82 * progress) / LAST
+  const p = Math.min(1, fives / fivesGoal)
+  const arrived = !finished && p >= 1                           // дрова набраны — поезд прибыл
+  const cur = finished ? LAST : arrived ? idx + 1 : idx         // где сейчас стоит поезд
+  const pushed = data?.meta.rewards?._pushed || []              // станции, до которых «дотолкали» без бонуса
+  const target = finished ? 1 : (idx + p) / LAST
+  const rewardOf = (i) => data?.meta.rewards?.[i] || STATIONS[i].reward
 
   // движение поезда
   useEffect(() => {
-    const p = pathRef.current, el = trainRef.current
-    if (!p || !el || !data) return
+    const path = pathRef.current, el = trainRef.current
+    if (!path || !el || !data) return
     const L = lenRef.current
     const from = posRef.current ?? Math.max(0, target - 0.05)
     const ctl = animate(from, target, {
       duration: posRef.current == null ? 1.6 : 2.6, ease: 'easeInOut',
       onUpdate: (t) => {
         posRef.current = t
-        const q = p.getPointAtLength(L * Math.min(1, t))
-        const q2 = p.getPointAtLength(L * Math.min(1, t + 0.004))
-        const q1 = p.getPointAtLength(L * Math.max(0, t - 0.004))
+        const q = path.getPointAtLength(L * Math.min(1, t))
+        const q2 = path.getPointAtLength(L * Math.min(1, t + 0.004))
+        const q1 = path.getPointAtLength(L * Math.max(0, t - 0.004))
         const dx = q2.x - q1.x, dy = q2.y - q1.y
-        const back = dx < 0
-        const ang = Math.atan2(dy, back ? -dx : dx) * (180 / Math.PI)
+        // паровоз нарисован «носом» влево: при движении вправо зеркалим
+        const right = dx > 0
+        const ang = (right ? -Math.atan2(dy, dx) : Math.atan2(-dy, -dx)) * (180 / Math.PI)
         el.style.left = `${(q.x / VB.w) * 100}%`
         el.style.top = `${(q.y / VB.h) * 100}%`
-        el.style.transform = `translate(-50%, -78%) ${back ? 'scaleX(-1)' : ''} rotate(${ang * 0.5}deg)`
+        el.style.transform = `translate(-50%, -78%) ${right ? 'scaleX(-1)' : ''} rotate(${ang * 0.6}deg)`
       },
     })
     return () => ctl.stop()
@@ -76,19 +81,24 @@ export default function Train() {
   }
 
   const addFive = () => act(() => api.train.addFive(idx, subject), () => setBoom((b) => b + 1))
-  const depart = () => {
-    if (!ready && !confirm('Дрова или задания ещё не набраны. Всё равно отправить поезд на следующую станцию?')) return
-    act(() => api.train.advance(idx + 1))
+  const nextLeg = () => act(() => api.train.advance(idx + 1))
+  const push = () => {
+    if (!confirm(`Дров не хватило (${fives} из ${fivesGoal}). Дотолкать поезд до станции «${STATIONS[idx + 1].name}»? Бонус за неё класс не получит.`)) return
+    act(async () => {
+      await api.train.setReward({ ...(data.meta.rewards || {}), _pushed: [...pushed, idx + 1] })
+      await api.train.advance(idx + 1)
+    })
   }
-  const reward = (i) => data?.meta.rewards?.[i] || STATIONS[i].reward
+
+  const nextSt = STATIONS[Math.min(idx + 1, LAST)]
 
   return (
     <div className="train-page">
       <div className="head-row">
-        <Title color={C.sky} sub="Одна станция — одна неделя. Заправим паровоз дровами-пятёрками и выполним задания — поедем дальше и получим награду!">Поезд класса</Title>
+        <Title color={C.sky} sub="Одна станция — одна неделя. Паровоз едет только на дровах: набираем пятёрки. Хватило дров — приехали и открыли бонус. Не хватило — учитель может дотолкать поезд, но бонуса не будет.">Поезд класса</Title>
       </div>
 
-      {!data ? <p className="soft center">Паровоз прогревает котёл…</p> : (
+      {!data ? <p className="soft center">Загружаем маршрут…</p> : (
         <>
           <div className="scene train-scene">
             <div className="sky-grad day" />
@@ -108,42 +118,42 @@ export default function Train() {
             {pts && STATIONS.map((s, i) => (
               <button
                 key={s.name}
-                className={`station ${i < idx ? 'passed' : i === idx ? 'now' : 'future'} ${i > 4 && i < 8 ? 'lbl-up' : ''}`}
+                className={`station ${i < cur ? 'passed' : i === cur ? 'now' : 'future'} ${pushed.includes(i) && i <= cur ? 'pushed' : ''} ${i > 4 && i < 8 ? 'lbl-up' : ''}`}
                 style={{ left: `${(pts[i].x / VB.w) * 100}%`, top: `${(pts[i].y / VB.h) * 100}%` }}
                 onClick={() => setInfo(i)}
               >
-                <span className="dot boil"><b>{i < idx ? '✓' : s.emoji}</b></span>
+                <span className="dot boil"><b>{i < cur ? (pushed.includes(i) ? '↷' : '✓') : s.emoji}</b></span>
                 <span className="lbl">{s.name}</span>
-                {i === idx && <span className="flag-now">🚩</span>}
               </button>
             ))}
 
             <div className="train" ref={trainRef}>
               <div className="train-row">
                 <Locomotive width="100%" style={{ width: '48%' }} />
-                <Wagon width="100%" color={C.mint} logs={Math.min(4, Math.ceil(pF * 4))} style={{ width: '34%', marginLeft: '-3%' }} />
+                <Wagon width="100%" color={C.mint} logs={Math.min(4, Math.ceil(p * 4))} style={{ width: '34%', marginLeft: '-3%' }} />
               </div>
             </div>
           </div>
 
           <div className="train-grid">
-            <Card color="#fff4d6" tilt={-0.6} className="gauge-card">
-              <h2>🔥 Дрова — пятёрки</h2>
+            <Card color="#fff1d0" tilt={-0.4} className="gauge-card">
+              <h2>Дрова — пятёрки за неделю</h2>
+              <p className="soft small">Перегон: «{STATIONS[Math.min(idx, LAST)].name}» → «{nextSt.name}»</p>
               <Gauge value={fives} goal={fivesGoal} color={C.orange} unit="пятёрок" />
               <AnimatePresence>
-                {pF >= 1 && <motion.p className="full" initial={{ scale: 0 }} animate={{ scale: 1 }}>Топка полна! 🔥</motion.p>}
+                {arrived && <motion.p className="full" initial={{ scale: 0 }} animate={{ scale: 1 }}>Дров хватило — поезд прибыл на станцию!</motion.p>}
               </AnimatePresence>
 
-              {!isTeacher && (
+              {!isTeacher && !finished && (
                 <div className="five-form">
                   <div className="chips tiny">
                     {SUBJECTS.map((s) => <button key={s} className={`chip ${subject === s ? 'on' : ''}`} onClick={() => setSubject(s)}>{s}</button>)}
                   </div>
-                  <Btn color={C.mint} onClick={addFive} className="big">⭐ Я получил(а) пятёрку!</Btn>
+                  <Btn color={C.mint} onClick={addFive} className="big">Добавить мою пятёрку</Btn>
                   <LogFly key={boom} show={boom > 0} />
                 </div>
               )}
-              {isTeacher && <TeacherFives idx={idx} act={act} />}
+              {isTeacher && !finished && <TeacherFives idx={idx} act={act} />}
 
               <ul className="log">
                 {data.fives.slice(0, 7).map((f) => (
@@ -156,31 +166,34 @@ export default function Train() {
               </ul>
             </Card>
 
-            <Card color="#dff4ff" tilt={0.6} className="gauge-card">
-              <h2>⚙️ Уголь — задания и активности</h2>
-              <Gauge value={acts} goal={actsGoal} color={C.sky} unit="активностей" />
-              <TaskList data={data} idx={idx} isTeacher={isTeacher} act={act} />
+            <Card color="#e3f0ff" tilt={0.4} className={`gauge-card bonus ${arrived ? 'open' : 'locked'}`}>
+              <h2>Бонус станции «{nextSt.name}»</h2>
+              <div className="bonus-prize">
+                <small>Награда</small>
+                <p>{rewardOf(Math.min(idx + 1, LAST))}</p>
+              </div>
+              {isTeacher && !finished && <RewardEdit key={idx} value={rewardOf(idx + 1)} onSave={(v) => act(() => api.train.setReward({ ...(data.meta.rewards || {}), [idx + 1]: v }))} />}
+              <h3>Активности недели</h3>
+              <TaskList data={data} idx={idx} isTeacher={isTeacher} act={act} unlocked={arrived} />
+              {!arrived && !finished && <p className="lock-note">Бонус откроется, когда поезд доедет до станции на своих дровах.</p>}
             </Card>
           </div>
 
           <Card color="#fff" className="station-card">
             <div className="st-left">
-              <span className="big-emoji">{idx >= LAST && ready ? '🎉' : STATIONS[Math.min(idx, LAST)].emoji}</span>
+              <span className="big-emoji">{STATIONS[cur].emoji}</span>
               <div>
-                <small>сейчас</small>
-                <h2>Станция {Math.min(idx, LAST) + 1}: «{STATIONS[Math.min(idx, LAST)].name}»</h2>
+                <small>{arrived ? 'прибыли на станцию' : 'сейчас'}</small>
+                <h2>Станция {cur + 1}: «{STATIONS[cur].name}»</h2>
               </div>
             </div>
-            <div className="st-prize">
-              <small>🎁 Награда за станцию</small>
-              <p>{reward(Math.min(idx, LAST))}</p>
-              {isTeacher && <RewardEdit key={idx} value={reward(idx)} onSave={(v) => act(() => api.train.setReward({ ...(data.meta.rewards || {}), [idx]: v }))} />}
+            <div className="st-actions">
+              {isTeacher && arrived && <Btn color={C.mint} onClick={nextLeg}>Бонус получен — едем дальше</Btn>}
+              {isTeacher && !arrived && !finished && <Btn color="#f3ead9" onClick={push}>Дотолкать (без бонуса)</Btn>}
+              {!isTeacher && arrived && <p className="full">Бонус открыт! Учитель отправит поезд дальше.</p>}
+              {!isTeacher && !arrived && !finished && <p className="soft">До станции «{nextSt.name}» не хватает {Math.max(0, fivesGoal - fives)} {fivesGoal - fives === 1 ? 'пятёрки' : 'пятёрок'}.</p>}
+              {finished && <p className="full">Финиш! Мы добрались до конечной станции.</p>}
             </div>
-            {isTeacher && idx < LAST && (
-              <Btn color={ready ? C.mint : '#e5e5ef'} onClick={depart}>{ready ? '🚂 Поезд едет дальше!' : 'Отправить досрочно'}</Btn>
-            )}
-            {!isTeacher && ready && idx < LAST && <p className="full">Всё готово! Ждём, когда учитель даст гудок 🚂</p>}
-            {idx >= LAST && ready && <p className="full">Финиш! Мы добрались до Звёздной гавани! 🌟</p>}
           </Card>
         </>
       )}
@@ -191,8 +204,8 @@ export default function Train() {
           <div className="station-info">
             <span className="big-emoji">{STATIONS[info].emoji}</span>
             <h2>Станция {info + 1}: «{STATIONS[info].name}»</h2>
-            <p>{info < idx ? '✅ Мы здесь уже были!' : info === idx ? '🚩 Мы стоим на этой станции' : '⏳ Скоро доберёмся'}</p>
-            <div className="st-prize"><small>🎁 Награда</small><p>{info <= idx ? reward(info) : reward(info)}</p></div>
+            <p>{info === 0 ? 'Отсюда мы стартовали.' : info < cur ? (pushed.includes(info) ? 'Мы сюда дотолкали поезд, бонус не получен.' : 'Приехали на своих дровах — бонус получен.') : info === cur ? 'Поезд сейчас здесь.' : 'Впереди.'}</p>
+            {info > 0 && <div className="st-prize"><small>Награда за станцию</small><p>{rewardOf(info)}</p></div>}
           </div>
         )}
       </Modal>
@@ -222,7 +235,7 @@ function TeacherFives({ idx, act }) {
   const [what, setWhat] = useState('')
   return (
     <div className="teacher-box">
-      <small>Учитель: добавить сразу несколько пятёрок</small>
+      <small>Учитель: добавить несколько пятёрок сразу</small>
       <div className="row">
         <input type="number" min="1" max="30" value={n} onChange={(e) => setN(Math.max(1, Math.min(30, +e.target.value || 1)))} className="num" />
         <input value={what} onChange={(e) => setWhat(e.target.value)} placeholder="за что (например, контрольная)" />
@@ -232,26 +245,26 @@ function TeacherFives({ idx, act }) {
   )
 }
 
-function TaskList({ data, idx, isTeacher, act }) {
+function TaskList({ data, idx, isTeacher, act, unlocked }) {
   const [t, setT] = useState('')
   return (
     <div className="tasks">
       <ul>
         {data.tasks.map((k) => (
           <li key={k.id} className={k.done ? 'done' : ''}>
-            <button className={`check ${k.done ? 'on' : ''}`} disabled={!isTeacher} onClick={() => act(() => api.train.toggleTask(k.id, !k.done))} aria-label="выполнено">
+            <button className={`check ${k.done ? 'on' : ''}`} disabled={!isTeacher || !unlocked} onClick={() => act(() => api.train.toggleTask(k.id, !k.done))} aria-label="выполнено">
               <i className="boil" />{k.done && <b>✓</b>}
             </button>
             <span>{k.title}</span>
             {isTeacher && <button className="x" onClick={() => act(() => api.train.removeTask(k.id))}>✕</button>}
           </li>
         ))}
-        {data.tasks.length === 0 && <li className="soft">Учитель ещё не вписал задания на эту неделю.</li>}
+        {data.tasks.length === 0 && <li className="soft">Учитель ещё не вписал активности на эту неделю.</li>}
       </ul>
       {isTeacher && (
         <form className="row" onSubmit={(e) => { e.preventDefault(); if (t.trim()) act(() => api.train.addTask(idx, t.trim()), () => setT('')) }}>
-          <input value={t} onChange={(e) => setT(e.target.value)} placeholder="Новое задание: например, сходить в музей" />
-          <Btn color={C.sky} type="submit">+ Задание</Btn>
+          <input value={t} onChange={(e) => setT(e.target.value)} placeholder="Новая активность, например: поход в музей" />
+          <Btn color={C.sky} type="submit">Добавить</Btn>
         </form>
       )}
     </div>
@@ -263,7 +276,7 @@ function RewardEdit({ value, onSave }) {
   return (
     <form className="row" onSubmit={(e) => { e.preventDefault(); onSave(v) }}>
       <input value={v} onChange={(e) => setV(e.target.value)} />
-      <Btn color={C.sun} type="submit">Сохранить</Btn>
+      <Btn color={C.sun} type="submit">Сохранить награду</Btn>
     </form>
   )
 }

@@ -10,7 +10,7 @@ import { Locomotive, Mailbox, BookStack } from '../art/Things.jsx'
 import { STATIONS } from '../lib/stations.js'
 import { plural } from '../lib/util.js'
 
-const PHRASES = ['Привет! Что хорошего сделаешь сегодня?', 'Класс — это мы! 🧡', 'Загляни в Сад: там выросло что-то новое!', 'Пятёрки — это дрова для нашего поезда!', 'Ты важен. Просто так.']
+const PHRASES = ['Что нового у класса?', 'Загляни в сад: там могло вырасти что-то новое.', 'Пятёрки — топливо для нашего поезда.', 'На полке мог появиться хороший совет.', 'Если что-то беспокоит — есть ящик.']
 
 export default function Home() {
   const { user, isTeacher } = useAuth()
@@ -27,11 +27,10 @@ export default function Home() {
         train: t.value && {
           idx: t.value.meta.station_idx,
           fives: t.value.fives.reduce((a, f) => a + f.count, 0),
-          acts: t.value.tasks.filter((x) => x.done).length,
         },
         box: w.value && (isTeacher
           ? { text: `${w.value.filter((x) => !x.reply).length} без ответа`, hot: w.value.some((x) => !x.reply) }
-          : { text: w.value.some((x) => x.reply && new Date(x.replied_at) > seen) ? 'Тебе ответили!' : 'Расскажи, что тревожит', hot: w.value.some((x) => x.reply && new Date(x.replied_at) > seen) }),
+          : { text: w.value.some((x) => x.reply && new Date(x.replied_at) > seen) ? 'Тебе ответили!' : 'Анонимное письмо учителю', hot: w.value.some((x) => x.reply && new Date(x.replied_at) > seen) }),
       })
     })
     return () => { off = true }
@@ -47,25 +46,25 @@ export default function Home() {
       <Cloud w={90} color="#eaf8ff" style={{ position: 'absolute', top: 100, right: '26%' }} className="drift slow" />
 
       <div className="hello">
-        <Mascot size={130} mood="happy" />
+        <Mascot size={104} mood="happy" />
         <motion.div className="bubble" initial={{ scale: 0, rotate: -6 }} animate={{ scale: 1, rotate: -1.5 }} transition={{ delay: 0.35, type: 'spring', stiffness: 260, damping: 14 }}>
           <i className="boil" />
           <strong>{first ? `Привет, ${first}!` : 'Здравствуйте!'}</strong>
-          <span>{isTeacher ? 'Класс ждёт вас — заглядывайте в ящик и записывайте задания для поезда.' : phrase}</span>
+          <span>{isTeacher ? 'Загляните в ящик и впишите активности недели для поезда.' : phrase}</span>
         </motion.div>
       </div>
 
       <div className="worlds">
-        <World to="/garden" color="#c9f5c0" tilt={-1.6} title="Сад добрых дел" text={s.deeds != null ? `${s.deeds} ${plural(s.deeds, ['доброе дело', 'добрых дела', 'добрых дел'])} в саду` : 'Посади дерево!'}>
+        <World to="/garden" color="#c9f5c0" tilt={-1.6} title="Сад добрых дел" text={s.deeds != null ? `${s.deeds} ${plural(s.deeds, ['доброе дело', 'добрых дела', 'добрых дел'])} в саду` : 'Добавь первое дело'}>
           <div className="w-art garden-art"><Tree kind="sakura" size={90} /><Tree kind="sunflower" size={74} /><Tree kind="apple" size={100} /></div>
         </World>
-        <World to="/shelf" color="#ffe3a8" tilt={1.4} title="Книжная полка" text={s.books != null ? (s.books ? `${s.books} ${plural(s.books, ['книга', 'книги', 'книг'])} с отзывами` : 'Пока пусто — стань первым!') : 'Поделись книгой'}>
+        <World to="/shelf" color="#ffe3a8" tilt={1.4} title="Книжная полка" text={s.books != null ? (s.books ? `${s.books} ${plural(s.books, ['книга', 'книги', 'книг'])} с отзывами` : 'Пока пусто — стань первым') : 'Поделись книгой'}>
           <div className="w-art"><BookStack size={130} /></div>
         </World>
-        <World to="/train" color="#bfe9ff" tilt={1.2} title="Поезд класса" text={s.train ? `Станция «${place.name}» · 🔥 ${s.train.fives}/${GOALS.fives} · ⭐ ${s.train.acts}/${GOALS.acts}` : 'Заправим дровами?'}>
+        <World to="/train" color="#bfe9ff" tilt={1.2} title="Поезд класса" text={s.train ? `Станция «${place.name}» · дрова ${s.train.fives}/${GOALS.fives}` : 'Набираем пятёрки'}>
           <div className="w-art"><Locomotive width={190} /></div>
         </World>
-        <World to="/box" color="#d9d3ff" tilt={-1.3} title="Ящик тревог" text={s.box?.text || 'Тайный и безопасный'} hot={s.box?.hot}>
+        <World to="/box" color="#d9d3ff" tilt={-1.3} title="Ящик тревог" text={s.box?.text || 'Анонимно и безопасно'} hot={s.box?.hot}>
           <div className="w-art"><Mailbox size={140} mood="happy" /></div>
         </World>
       </div>

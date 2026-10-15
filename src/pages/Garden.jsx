@@ -70,8 +70,8 @@ export default function Garden() {
   return (
     <div className="garden">
       <div className="head-row">
-        <Title color={C.leaf} sub="Каждое доброе дело сажает в нашем саду дерево или цветок. Давайте вырастим целый лес!">Сад добрых дел</Title>
-        <Btn color={C.mint} className="big" onClick={() => setPlant(true)}>🌱 Посадить дерево</Btn>
+        <Title color={C.leaf} sub="Каждое доброе дело класса — новое дерево в общем саду. Чем больше дел, тем богаче сад.">Сад добрых дел</Title>
+        <Btn color={C.mint} className="big" onClick={() => setPlant(true)}>Добавить доброе дело</Btn>
       </div>
 
       <Card color="#fffdf5" className="progress-card">
@@ -85,7 +85,7 @@ export default function Garden() {
             <span key={m.n} className={n >= m.n ? 'done' : ''} title={m.text}><b>{n >= m.n ? m.icon : '❔'}</b> {m.n}</span>
           ))}
         </div>
-        <p className="pg-hint">{next ? `До «${next.text.toLowerCase()}» осталось ${next.n - n} ${plural(next.n - n, ['доброе дело', 'добрых дела', 'добрых дел'])}` : 'Сад расцвёл полностью. Вы — волшебники!'}</p>
+        <p className="pg-hint">{next ? `До «${next.text.toLowerCase()}» осталось ${next.n - n} ${plural(next.n - n, ['доброе дело', 'добрых дела', 'добрых дел'])}` : 'Сад расцвёл полностью. Отличная работа.'}</p>
       </Card>
 
       <div className="scene garden-scene">
@@ -104,7 +104,7 @@ export default function Garden() {
         {n === 0 && deeds && (
           <div className="empty-say">
             <Mascot size={120} mood="sleepy" />
-            <div className="bubble sm"><i className="boil" /><span>Здесь пока пустая поляна. Посади первое дерево — добрым делом!</span></div>
+            <div className="bubble sm"><i className="boil" /><span>Сад пока пуст. Добавь первое доброе дело — и здесь вырастет дерево.</span></div>
           </div>
         )}
 
@@ -136,7 +136,7 @@ export default function Garden() {
           <label className="field">
             <textarea value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Например: помог первоклашке донести рюкзак" rows={3} maxLength={140} autoFocus />
           </label>
-          <h3>Выбери, что вырастет</h3>
+          <h3>Выбери дерево</h3>
           <div className="tree-pick">
             {TREES.map((t) => (
               <button type="button" key={t.id} className={`pick ${tree === t.id ? 'on' : ''}`} onClick={() => setTree(t.id)}>
@@ -147,7 +147,7 @@ export default function Garden() {
             ))}
           </div>
           {err && <p className="err">{err}</p>}
-          <Btn color={C.mint} type="submit" disabled={busy || title.trim().length < 3}>{busy ? 'Сажаю…' : '🌱 Посадить!'}</Btn>
+          <Btn color={C.mint} type="submit" disabled={busy || title.trim().length < 3}>{busy ? 'Сажаю…' : 'Посадить'}</Btn>
         </form>
       </Modal>
 
@@ -157,7 +157,7 @@ export default function Garden() {
             <Tree kind={sel.tree} size={110} growth={Math.min(1, days(sel.created_at) / 6)} />
             <h2>«{sel.title}»</h2>
             <p className="who"><b>{sel.profile?.avatar}</b> {sel.profile?.name} · {ago(sel.created_at)}</p>
-            <p className="age">{days(sel.created_at) < 1 ? 'Совсем малыш — только посажен!' : days(sel.created_at) < 6 ? 'Растёт каждый день 🌱' : 'Уже выросло большим!'}</p>
+            <p className="age">{days(sel.created_at) < 1 ? 'Только что посажено' : days(sel.created_at) < 6 ? 'Продолжает расти' : 'Выросло полностью'}</p>
             {(isTeacher || sel.user_id === user.id) && <button className="link-btn" onClick={() => remove(sel)}>убрать из сада</button>}
           </div>
         )}

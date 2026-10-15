@@ -8,10 +8,10 @@ import { Mailbox, Plane } from '../art/Things.jsx'
 import { ago } from '../lib/util.js'
 
 export const MOODS = [
-  { id: 'cloud', icon: '☁️', label: 'Немного тревожно', size: 1 },
+  { id: 'cloud', icon: '☁️', label: 'Беспокоит', size: 1 },
   { id: 'rain', icon: '🌧️', label: 'Грустно', size: 2 },
-  { id: 'storm', icon: '⛈️', label: 'Очень страшно', size: 3 },
-  { id: 'fog', icon: '🌫️', label: 'Сам не пойму', size: 2 },
+  { id: 'storm', icon: '⛈️', label: 'Тяжело', size: 3 },
+  { id: 'fog', icon: '🌫️', label: 'Не знаю, как назвать', size: 2 },
 ]
 const mood = (id) => MOODS.find((m) => m.id === id) || MOODS[0]
 
@@ -59,7 +59,7 @@ function StudentBox() {
 
   return (
     <>
-      <Title color={C.grape} sub="Тайный почтовый ящик. Напиши, что тебя беспокоит: учитель прочитает письмо и ответит, но не узнает, что оно от тебя.">Ящик тревог</Title>
+      <Title color={C.grape} sub="Анонимный ящик. Напиши то, что трудно сказать вслух: учитель прочитает и ответит, но не узнает, что письмо твоё.">Ящик тревог</Title>
 
       <div className="box-hero">
         <div className="box-monster">
@@ -75,7 +75,7 @@ function StudentBox() {
 
         <Card color="#2d2a5e" className="write-card">
           <p className="say">
-            {sent ? '✨ Письмо у меня в животе. Ответ придёт сюда — заглядывай!' : 'Я — Проглотик. Я храню тайны и никому не скажу, кто ты. 🤫'}
+            {sent ? 'Письмо отправлено. Ответ появится ниже — загляни сюда позже.' : 'Здесь можно написать о том, что беспокоит. Имя не нужно: учитель не узнает, кто автор.'}
           </p>
           <div className="moods">
             {MOODS.map((x) => (
@@ -88,14 +88,14 @@ function StudentBox() {
             <textarea rows={5} value={text} onChange={(e) => setText(e.target.value)} placeholder="Что тебя беспокоит? Пиши как есть. Имя писать не нужно." maxLength={1500} disabled={flying} />
           </label>
           {err && <p className="err light">{err}</p>}
-          <Btn color={C.pink} onClick={send} disabled={flying || text.trim().length < 3} className="big">✉️ Отправить в ящик</Btn>
-          <p className="fine">🔒 В письме нет твоего имени. Учитель видит только текст.</p>
+          <Btn color={C.pink} onClick={send} disabled={flying || text.trim().length < 3} className="big">Отправить письмо</Btn>
+          <p className="fine">В письме нет твоего имени. Учитель видит только текст.</p>
         </Card>
       </div>
 
       <h2 className="sec-h">Мои письма</h2>
       <div className="letters">
-        {list?.length === 0 && <p className="soft light center">Здесь будут твои письма и ответы на них. Пока ты ничего не отправлял(а) — и это нормально 🙂</p>}
+        {list?.length === 0 && <p className="soft light center">Здесь будут твои письма и ответы на них.</p>}
         {list?.map((w) => (
           <motion.div key={w.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <Card color="#fffdf5" tilt={w.id.charCodeAt(0) % 2 ? 0.4 : -0.4} className={`letter ${newReply(w) ? 'glow' : ''}`}>
@@ -113,7 +113,7 @@ function StudentBox() {
       </div>
 
       <Card color="#ffe3e8" className="help-card">
-        <b>💛 Если очень плохо или страшно</b>
+        <b>Если очень плохо или страшно</b>
         <p>Скажи взрослому, которому доверяешь: маме, папе, бабушке, учителю. Можно позвонить на детский телефон доверия: <strong>8-800-2000-122</strong>. Это бесплатно и анонимно, работает каждый день.</p>
       </Card>
     </>
@@ -130,14 +130,14 @@ function TeacherInbox() {
 
   return (
     <>
-      <Title color={C.grape} sub="Письма от класса приходят без имён — так и задумано. Ответ получит только тот, кто написал.">Почта доверия</Title>
+      <Title color={C.grape} sub="Письма приходят без имён — так задумано. Ответ увидит только тот, кто написал.">Почта доверия</Title>
       <div className="inbox-head">
         <Mascot size={90} mood={waiting ? 'wow' : 'love'} />
-        <p>{waiting ? `Ждут ответа: ${waiting}` : 'Все письма отвечены. Спасибо вам! 💛'}</p>
+        <p>{waiting ? `Ждут ответа: ${waiting}` : 'Все письма отвечены.'}</p>
       </div>
       {err && <p className="err light">{err}</p>}
       <div className="letters">
-        {list?.length === 0 && <p className="soft light center">Писем пока нет. Ящик спит 🌙</p>}
+        {list?.length === 0 && <p className="soft light center">Писем пока нет.</p>}
         {list?.map((w) => <TeacherLetter key={w.id} w={w} onDone={load} />)}
       </div>
     </>

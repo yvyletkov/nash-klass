@@ -2,13 +2,13 @@ import { INK, C, Blob } from './sketch.jsx'
 
 export const TREES = [
   { id: 'oak', name: 'Дуб', hint: 'крепкий и надёжный' },
-  { id: 'apple', name: 'Яблоня', hint: 'щедрая' },
+  { id: 'apple', name: 'Яблоня', hint: 'с яблоками' },
   { id: 'birch', name: 'Берёзка', hint: 'нежная' },
   { id: 'spruce', name: 'Ёлка', hint: 'зелёная круглый год' },
-  { id: 'sakura', name: 'Сакура', hint: 'самая красивая' },
+  { id: 'sakura', name: 'Сакура', hint: 'весной' },
   { id: 'sunflower', name: 'Подсолнух', hint: 'за солнцем' },
-  { id: 'tulip', name: 'Тюльпан', hint: 'весёлый' },
-  { id: 'star', name: 'Звёздное дерево', hint: 'волшебное' },
+  { id: 'tulip', name: 'Тюльпан', hint: 'яркий' },
+  { id: 'star', name: 'Звёздное дерево', hint: 'редкое' },
 ]
 
 const trunk = (d, fill = '#a9703c') => (

@@ -51,8 +51,8 @@ export default function Shelf() {
   return (
     <div className="shelf-page">
       <div className="head-row">
-        <Title color={C.orange} sub="Читаем, пишем отзывы и советуем друг другу. Чем больше книг — тем уютнее наша полка.">Книжная полка класса</Title>
-        <Btn color={C.sun} className="big" onClick={() => setAdd(true)}>📖 Добавить книгу</Btn>
+        <Title color={C.orange} sub="Читаем, пишем честные отзывы и советуем друг другу. Полка наполняется вашими книгами.">Книжная полка класса</Title>
+        <Btn color={C.sun} className="big" onClick={() => setAdd(true)}>Добавить книгу</Btn>
       </div>
 
       {!empty && (
@@ -72,7 +72,7 @@ export default function Shelf() {
         {empty && (
           <div className="empty-say shelf-say">
             <Mascot size={110} mood="sleepy" />
-            <div className="bubble sm"><i className="boil" /><span>Ой, как пусто! Даже паутина выросла. Принеси первую книгу — и полка оживёт!</span></div>
+            <div className="bubble sm"><i className="boil" /><span>Полка пока пустая. Добавь первую книгу — и она оживёт.</span></div>
           </div>
         )}
         {rows.map((row, ri) => (
@@ -88,7 +88,7 @@ export default function Shelf() {
           </div>
         ))}
       </div>
-      {books && !empty && shown.length === 0 && <p className="soft center">Ничего не найдено. Может, ты принесёшь такую книгу? 😉</p>}
+      {books && !empty && shown.length === 0 && <p className="soft center">Ничего не найдено.</p>}
       {err && <p className="err">{err}</p>}
 
       <AddBook open={add} onClose={() => setAdd(false)} onAdded={(b) => { setBooks((x) => [...x, b]); setAdd(false); setSel(b) }} />
@@ -183,7 +183,7 @@ function AddBook({ open, onClose, onAdded }) {
         </label>
         <div className="field"><span>Твоя оценка</span><Stars n={f.stars} set={(i) => setF((x) => ({ ...x, stars: i }))} /></div>
         <label className="field"><span>Твой отзыв — почему стоит прочитать?</span>
-          <textarea rows={4} value={f.review} onChange={up('review')} maxLength={800} placeholder="Что понравилось? Кто тебе запомнился? Не рассказывай, чем всё закончилось 😉" />
+          <textarea rows={4} value={f.review} onChange={up('review')} maxLength={800} placeholder="Что понравилось? Кто тебе запомнился? Без спойлеров." />
           <small className={f.review.trim().length >= 20 ? 'ok' : ''}>{f.review.trim().length}/20 — напиши хотя бы пару предложений</small>
         </label>
         <div className="field"><span>Цвет корешка</span>
@@ -192,7 +192,7 @@ function AddBook({ open, onClose, onAdded }) {
           </div>
         </div>
         {err && <p className="err">{err}</p>}
-        <Btn color={C.sun} type="submit" disabled={busy || !ok}>{busy ? 'Ставлю на полку…' : '📚 На полку!'}</Btn>
+        <Btn color={C.sun} type="submit" disabled={busy || !ok}>{busy ? 'Ставлю на полку…' : 'Поставить на полку'}</Btn>
       </form>
     </Modal>
   )

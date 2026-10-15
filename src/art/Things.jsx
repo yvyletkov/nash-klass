@@ -68,39 +68,31 @@ export function Wagon({ width = 130, color = C.mint, logs = 3, style }) {
   )
 }
 
-/* ---------- Ящик тревог: пушистый почтовый монстрик-«проглотик» ---------- */
-export function Mailbox({ size = 220, mood = 'happy', open = false, style }) {
+/* ---------- Ящик тревог: классический почтовый ящик со светящейся щелью ---------- */
+export function Mailbox({ size = 220, open = false, style }) {
   return (
     <svg className="boil" width={size} height={size * 1.1} viewBox="0 0 220 240" style={style} overflow="visible">
-      <ellipse cx="110" cy="228" rx="64" ry="9" fill={INK} opacity=".2" />
-      <g strokeLinejoin="round" strokeLinecap="round" stroke={INK} strokeWidth="5.5">
-        {/* столбик */}
-        <path d="M92 150 L90 226 L130 226 L128 150 Z" fill="#a9703c" />
-        <path d="M100 170 q6 3 12 0 M98 196 q8 3 16 0" strokeWidth="3" fill="none" opacity=".4" />
-        {/* тело */}
-        <path d="M24 100 C 24 44, 62 22, 110 22 C 158 22, 196 44, 196 100 L196 148 C196 160, 188 166, 176 166 L44 166 C32 166, 24 160, 24 148 Z" fill="#7b8cff" />
-        <path d="M40 110 C 40 62, 70 40, 110 40" stroke="#fff" strokeWidth="6" fill="none" opacity=".35" />
-        {/* пушистые «ушки» */}
-        <path d="M54 40 L44 14 L76 28 Z M166 40 L176 14 L144 28 Z" fill="#7b8cff" />
-        <path d="M52 32 L48 22 L62 28 Z M168 32 L172 22 L158 28 Z" fill={C.pink} stroke="none" />
-        {/* глаза */}
-        <circle cx="78" cy="76" r="20" fill="#fff" /><circle cx="142" cy="76" r="20" fill="#fff" />
-        {mood === 'sleepy' ? (
-          <path d="M64 80 q14 10 28 0 M128 80 q14 10 28 0" fill="none" />
-        ) : (
-          <>
-            <circle cx="82" cy="78" r="9" fill={INK} stroke="none" /><circle cx="138" cy="78" r="9" fill={INK} stroke="none" />
-            <circle cx="85" cy="74" r="3.2" fill="#fff" stroke="none" /><circle cx="141" cy="74" r="3.2" fill="#fff" stroke="none" />
-          </>
-        )}
-        <circle cx="46" cy="104" r="10" fill={C.pink} stroke="none" opacity=".75" /><circle cx="174" cy="104" r="10" fill={C.pink} stroke="none" opacity=".75" />
-        {/* рот-щель */}
-        <path d={open ? 'M64 118 Q110 164 156 118 Z' : 'M70 120 Q110 142 150 120'} fill={open ? '#3a1f4d' : 'none'} />
-        {open && <path d="M88 138 Q110 152 132 138 Q110 128 88 138 Z" fill={C.coral} stroke="none" />}
+      <ellipse cx="110" cy="228" rx="64" ry="9" fill={INK} opacity=".25" />
+      <g strokeLinejoin="round" strokeLinecap="round" stroke={INK} strokeWidth="5">
+        {/* столб */}
+        <path d="M96 150 L94 226 L126 226 L124 150 Z" fill="#a9703c" />
+        <path d="M100 176 q5 3 10 0 M99 200 q6 3 12 0" strokeWidth="3" fill="none" opacity=".4" />
+        {/* корпус */}
+        <path d="M28 104 C 28 54, 62 30, 110 30 C 158 30, 192 54, 192 104 L192 146 C192 156, 186 162, 176 162 L44 162 C34 162, 28 156, 28 146 Z" fill="#5b7bd9" />
+        <path d="M44 108 C 44 70, 68 48, 104 46" stroke="#fff" strokeWidth="6" fill="none" opacity=".3" />
+        {/* дверца */}
+        <path d="M54 92 H166 V146 H54 Z" fill="#4a68c0" strokeWidth="4" />
+        <circle cx="154" cy="119" r="5" fill={C.sun} strokeWidth="3" />
+        {/* щель для писем */}
+        <rect x="70" y="64" width="80" height="14" rx="7" fill={open ? C.sun : '#1c1740'} />
+        {open && <rect x="70" y="64" width="80" height="14" rx="7" fill="none" stroke="#fff" strokeWidth="2" opacity=".8" />}
+        {/* надпись */}
+        <path d="M76 118 h40 M76 130 h28" stroke="#fff" strokeWidth="4" opacity=".7" />
         {/* флажок */}
-        <path d="M196 90 H214 V50" fill="none" />
-        <path d="M214 50 L214 70 L194 60 Z" fill={C.coral} strokeWidth="4" className="flag" />
+        <path d="M192 96 H208 V52" fill="none" />
+        <path d="M208 52 L208 74 L186 63 Z" fill={C.coral} strokeWidth="4" className="flag" />
       </g>
+      {open && <g className="glow-rays" stroke={C.sun} strokeWidth="4" strokeLinecap="round"><path d="M110 50 V36 M80 54 L72 42 M140 54 L148 42" /></g>}
     </svg>
   )
 }

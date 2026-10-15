@@ -1,16 +1,16 @@
 :root {
   --ink: #2a2140;
   --paper: #fff6e2;
-  --sun: #ffc93c; --coral: #ff6b6b; --mint: #3ed6a0; --sky: #4cc9f0; --grape: #9b5de5; --pink: #ff8fb8; --leaf: #5fcf5a; --orange: #ff9f1c;
+  --sun: #f6c344; --coral: #ef6a5a; --mint: #3dc2a0; --sky: #4aaee6; --grape: #8c64d6; --pink: #f08cab; --leaf: #5fbd58; --orange: #f59a23;
   --wob: url(#wob1);
-  --r1: 24px 32px 20px 36px / 34px 20px 36px 24px;
-  --r2: 30px 20px 34px 22px / 22px 34px 20px 30px;
+  --r1: 14px 20px 12px 22px / 20px 12px 22px 14px;
+  --r2: 12px 16px 10px 18px / 16px 10px 18px 12px;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0; color: var(--ink);
-  font-family: 'Neucha', 'Comic Sans MS', cursive; font-size: 18px; line-height: 1.35;
+  font-family: 'Neucha', 'Comic Sans MS', cursive; font-size: 17px; line-height: 1.38;
   background-color: var(--paper);
   background-image:
     linear-gradient(rgba(76, 140, 220, .16) 1.5px, transparent 1.5px),
@@ -59,14 +59,14 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 
 /* ---------- Карточки, кнопки ---------- */
 .card { position: relative; isolation: isolate; padding: 18px 22px; transform: rotate(var(--tilt, 0deg)); }
-.card-bg { position: absolute; inset: 0; z-index: -1; background: var(--c); border: 3.5px solid var(--ink); border-radius: var(--r1); box-shadow: 5px 6px 0 var(--ink); }
-.btn { position: relative; isolation: isolate; border: none; background: none; padding: 11px 24px; font-size: 20px; font-weight: 700; cursor: pointer; transition: transform .12s; }
-.btn-bg { position: absolute; inset: 0; z-index: -1; background: var(--c); border: 3.5px solid var(--ink); border-radius: var(--r2); box-shadow: 3px 4px 0 var(--ink); transition: box-shadow .12s; }
+.card-bg { position: absolute; inset: 0; z-index: -1; background: var(--c); border: 3px solid var(--ink); border-radius: var(--r1); box-shadow: 4px 5px 0 var(--ink); }
+.btn { position: relative; isolation: isolate; border: none; background: none; padding: 9px 20px; font-size: 18px; font-weight: 700; cursor: pointer; transition: transform .12s; }
+.btn-bg { position: absolute; inset: 0; z-index: -1; background: var(--c); border: 3px solid var(--ink); border-radius: var(--r2); box-shadow: 3px 3px 0 var(--ink); transition: box-shadow .12s; }
 .btn:hover:not(:disabled) { transform: translate(-1px, -3px) rotate(-1.5deg) scale(1.04); }
 .btn:active:not(:disabled) { transform: translate(3px, 4px); }
 .btn:active:not(:disabled) .btn-bg { box-shadow: 0 0 0 var(--ink); }
 .btn:disabled { opacity: .5; cursor: not-allowed; filter: grayscale(.5); }
-.btn.big { font-size: 22px; padding: 13px 28px; }
+.btn.big { font-size: 19px; padding: 11px 24px; }
 .btn span { position: relative; white-space: nowrap; }
 
 .chip { border: 3px solid var(--ink); background: #fff; border-radius: 999px; padding: 3px 14px; font-size: 16px; font-weight: 700; transition: transform .12s, background .12s; }
@@ -303,3 +303,19 @@ input:focus, textarea:focus, select:focus { box-shadow: 4px 4px 0 var(--sky); tr
   .box-page { padding: 18px 14px 22px; }
   .garden-scene { min-height: 380px; }
 }
+
+/* ---------- Правки: взрослее, спокойнее ---------- */
+.world .card-bg { box-shadow: 5px 7px 0 var(--ink); }
+.world h2 { font-size: 38px; }
+.chip { border-width: 2.5px; border-radius: 10px; padding: 3px 12px; }
+.mood, .pick { border-radius: 12px; }
+.me-chip { border-radius: 12px; }
+.tabs a { border-radius: 12px; }
+.station-card .st-actions { display: flex; align-items: center; }
+.small { font-size: 15px; margin-bottom: 8px; }
+.bonus-prize { background: #fff; border: 2.5px solid var(--ink); border-radius: 12px; padding: 8px 14px; margin-bottom: 4px; } .bonus-prize small { opacity: .6; font-weight: 700; } .bonus-prize p { font-size: 20px; }
+.bonus h3 { margin: 14px 0 4px; }
+.bonus.locked .tasks, .bonus.locked .bonus-prize { opacity: .55; filter: grayscale(.6); }
+.lock-note { margin-top: 10px; font-size: 15px; opacity: .75; padding: 6px 10px; border: 2.5px dashed var(--ink); border-radius: 10px; }
+.station.pushed .dot { background: #e6d5b8; }
+.glow-rays { animation: twinkle 1.2s infinite; }

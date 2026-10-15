@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 export const INK = '#2a2140'
 export const C = {
-  sun: '#ffc93c', coral: '#ff6b6b', mint: '#3ed6a0', sky: '#4cc9f0', grape: '#9b5de5',
-  pink: '#ff8fb8', leaf: '#5fcf5a', orange: '#ff9f1c', paper: '#fff6e2', cream: '#fff3b0',
+  sun: '#f6c344', coral: '#ef6a5a', mint: '#3dc2a0', sky: '#4aaee6', grape: '#8c64d6',
+  pink: '#f08cab', leaf: '#5fbd58', orange: '#f59a23', paper: '#fff6e2', cream: '#fff3b0',
 }
 
 /* Три фильтра с разным шумом. Каждые ~150 мс переключаем их — линии «дрожат», как в рисованном мультфильме. */
@@ -14,8 +14,8 @@ export function SketchDefs() {
       <defs>
         {[1, 2, 3].map((n) => (
           <filter key={n} id={`wob${n}`} x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed={n * 7} result="n" />
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed={n * 7} result="n" />
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G" />
           </filter>
         ))}
       </defs>

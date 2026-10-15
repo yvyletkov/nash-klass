@@ -26,6 +26,7 @@ export default function Home() {
         deeds: d.value?.length, books: b.value?.length,
         train: t.value && {
           idx: t.value.meta.station_idx,
+          names: (t.value.meta.rewards?._stations || STATIONS).map((x) => x.name),
           fives: t.value.fives.reduce((a, f) => a + f.count, 0),
         },
         box: w.value && (isTeacher
@@ -37,7 +38,7 @@ export default function Home() {
   }, [isTeacher])
 
   const first = isTeacher ? '' : (user.name.split(' ')[0] || '')
-  const place = s.train ? STATIONS[Math.min(s.train.idx, STATIONS.length - 1)] : null
+  const place = s.train ? { name: s.train.names[Math.min(s.train.idx, s.train.names.length - 1)] } : null
 
   return (
     <div className="home">

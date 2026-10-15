@@ -319,3 +319,12 @@ input:focus, textarea:focus, select:focus { box-shadow: 4px 4px 0 var(--sky); tr
 .lock-note { margin-top: 10px; font-size: 15px; opacity: .75; padding: 6px 10px; border: 2.5px dashed var(--ink); border-radius: 10px; }
 .station.pushed .dot { background: #e6d5b8; }
 .glow-rays { animation: twinkle 1.2s infinite; }
+
+.route-editor h2 { font-size: 36px; }
+.route-editor ol { list-style: none; padding: 0; margin: 12px 0; display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; padding-right: 4px; }
+.route-editor li { display: grid; grid-template-columns: 26px 64px 1fr 1.6fr; gap: 8px; align-items: center; }
+.route-editor li.passed { opacity: .7; }
+.route-editor .n { font-family: 'Caveat'; font-size: 24px; font-weight: 700; text-align: center; }
+.route-editor select { padding: 6px 4px; font-size: 20px; }
+.route-editor input:disabled { background: #eee; }
+@media (max-width: 640px) { .route-editor li { grid-template-columns: 26px 60px 1fr; } .route-editor li input:last-child { grid-column: 2 / 4; } }

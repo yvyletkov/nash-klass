@@ -4,12 +4,11 @@ import { api, GOALS } from '../lib/api.js'
 import { useAuth } from '../App.jsx'
 import { Card, Btn, Title, Modal, Cloud, Sun, Star, C, INK } from '../art/sketch.jsx'
 import { Locomotive, Wagon } from '../art/Things.jsx'
-import { STATIONS, SUBJECTS } from '../lib/stations.js'
+import { STATIONS as DEFAULT_STATIONS, SUBJECTS, EMOJIS, MAX_STATIONS } from '../lib/stations.js'
 import { ago } from '../lib/util.js'
 
 const TRACK = 'M120 150 H 790 C 925 150 925 420 790 420 H 210 C 75 420 75 690 210 690 H 880'
 const VB = { w: 1000, h: 800 }
-const LAST = STATIONS.length - 1
 
 export default function Train() {
   const { user, isTeacher } = useAuth()
@@ -19,6 +18,7 @@ export default function Train() {
   const [info, setInfo] = useState(null)
   const [pts, setPts] = useState(null)
   const [boom, setBoom] = useState(0)
+  const [editor, setEditor] = useState(false)
   const pathRef = useRef(null)
   const trainRef = useRef(null)
   const lenRef = useRef(0)
@@ -33,13 +33,16 @@ export default function Train() {
     if (!p) return
     const L = p.getTotalLength()
     lenRef.current = L
-    setPts(STATIONS.map((_, i) => { const q = p.getPointAtLength((L * i) / LAST); return { x: q.x, y: q.y } }))
-  }, [!!data])
+    const n = (data?.meta.rewards?._stations || DEFAULT_STATIONS).length
+    setPts(Array.from({ length: n }, (_, i) => { const q = p.getPointAtLength((L * i) / (n - 1)); return { x: q.x, y: q.y } }))
+  }, [!!data, data?.meta.rewards?._stations?.length])
 
   /*
    Логика недели: паровоз едет только на дровах (пятёрках). Набрали норму — доехали до следующей станции
    и открыли бонус (активности + награда). Не успели — учитель может «дотолкать» поезд, но без бонуса.
   */
+  const STATIONS = data?.meta.rewards?._stations || DEFAULT_STATIONS   // маршрут задаёт учитель
+  const LAST = STATIONS.length - 1
   const idx = data?.meta.station_idx ?? 0                      // станция, с которой начался текущий перегон
   const finished = idx >= LAST
   const fivesGoal = data?.meta.fives_goal ?? GOALS.fives
@@ -48,8 +51,9 @@ export default function Train() {
   const arrived = !finished && p >= 1                           // дрова набраны — поезд прибыл
   const cur = finished ? LAST : arrived ? idx + 1 : idx         // где сейчас стоит поезд
   const pushed = data?.meta.rewards?._pushed || []              // станции, до которых «дотолкали» без бонуса
-  const target = finished ? 1 : (idx + p) / LAST
-  const rewardOf = (i) => data?.meta.rewards?.[i] || STATIONS[i].reward
+  const target = finished || LAST < 1 ? 1 : (idx + p) / LAST
+  const rewardOf = (i) => STATIONS[i]?.reward || 'Награду пока не придумали'
+  const saveStations = (list) => act(() => api.train.setReward({ ...(data.meta.rewards || {}), _stations: list }))
 
   // движение поезда
   useEffect(() => {
@@ -115,7 +119,7 @@ export default function Train() {
               </g>
             </svg>
 
-            {pts && STATIONS.map((s, i) => (
+            {pts && pts.length === STATIONS.length && STATIONS.map((s, i) => (
               <button
                 key={s.name}
                 className={`station ${i < cur ? 'passed' : i === cur ? 'now' : 'future'} ${pushed.includes(i) && i <= cur ? 'pushed' : ''} ${i > 4 && i < 8 ? 'lbl-up' : ''}`}
@@ -172,7 +176,7 @@ export default function Train() {
                 <small>Награда</small>
                 <p>{rewardOf(Math.min(idx + 1, LAST))}</p>
               </div>
-              {isTeacher && !finished && <RewardEdit key={idx} value={rewardOf(idx + 1)} onSave={(v) => act(() => api.train.setReward({ ...(data.meta.rewards || {}), [idx + 1]: v }))} />}
+              {isTeacher && <Btn color={C.sun} onClick={() => setEditor(true)}>Редактировать маршрут</Btn>}
               <h3>Активности недели</h3>
               <TaskList data={data} idx={idx} isTeacher={isTeacher} act={act} unlocked={arrived} />
               {!arrived && !finished && <p className="lock-note">Бонус откроется, когда поезд доедет до станции на своих дровах.</p>}
@@ -189,15 +193,20 @@ export default function Train() {
             </div>
             <div className="st-actions">
               {isTeacher && arrived && <Btn color={C.mint} onClick={nextLeg}>Бонус получен — едем дальше</Btn>}
+              {isTeacher && finished && <Btn color={C.sun} onClick={() => setEditor(true)}>Добавить новую станцию</Btn>}
               {isTeacher && !arrived && !finished && <Btn color="#f3ead9" onClick={push}>Дотолкать (без бонуса)</Btn>}
               {!isTeacher && arrived && <p className="full">Бонус открыт! Учитель отправит поезд дальше.</p>}
               {!isTeacher && !arrived && !finished && <p className="soft">До станции «{nextSt.name}» не хватает {Math.max(0, fivesGoal - fives)} {fivesGoal - fives === 1 ? 'пятёрки' : 'пятёрок'}.</p>}
-              {finished && <p className="full">Финиш! Мы добрались до конечной станции.</p>}
+              {finished && <p className="full">Конечная станция! {isTeacher ? 'Можно добавить новые станции в маршрут.' : 'Ждём продолжения маршрута.'}</p>}
             </div>
           </Card>
         </>
       )}
       {err && <p className="err">{err}</p>}
+
+      <Modal open={editor} onClose={() => setEditor(false)} width={680}>
+        {editor && <RouteEditor stations={STATIONS} idx={idx} onSave={(l) => { saveStations(l); setEditor(false) }} />}
+      </Modal>
 
       <Modal open={info != null} onClose={() => setInfo(null)} width={420}>
         {info != null && (
@@ -209,6 +218,37 @@ export default function Train() {
           </div>
         )}
       </Modal>
+    </div>
+  )
+}
+
+function RouteEditor({ stations, idx, onSave }) {
+  const [list, setList] = useState(stations.map((x) => ({ ...x })))
+  const up = (i, k, v) => setList((l) => l.map((x, j) => (j === i ? { ...x, [k]: v } : x)))
+  const add = () => setList((l) => [...l, { name: '', emoji: EMOJIS[l.length % EMOJIS.length], reward: '' }])
+  const del = () => setList((l) => l.slice(0, -1))
+  const ok = list.every((x) => x.name.trim()) && list.length >= idx + 2
+  return (
+    <div className="route-editor">
+      <h2>Маршрут поезда</h2>
+      <p className="soft small">Придумайте название и награду для каждой станции. Станции, которые уже пройдены, можно только переименовать. Новые добавляются в конец маршрута (до {MAX_STATIONS}).</p>
+      <ol>
+        {list.map((st, i) => (
+          <li key={i} className={i <= idx ? 'passed' : ''}>
+            <span className="n">{i + 1}</span>
+            <select value={st.emoji} onChange={(e) => up(i, 'emoji', e.target.value)} aria-label="значок">
+              {[...new Set([st.emoji, ...EMOJIS])].map((e) => <option key={e}>{e}</option>)}
+            </select>
+            <input value={st.name} onChange={(e) => up(i, 'name', e.target.value)} placeholder="Название станции" maxLength={28} />
+            {i === 0 ? <em className="soft">старт</em> : <input value={st.reward} onChange={(e) => up(i, 'reward', e.target.value)} placeholder="Награда за приезд" maxLength={90} disabled={i <= idx} />}
+          </li>
+        ))}
+      </ol>
+      <div className="row">
+        <Btn color="#f3ead9" onClick={add} disabled={list.length >= MAX_STATIONS}>+ Станция</Btn>
+        <Btn color="#f3ead9" onClick={del} disabled={list.length <= idx + 2}>Убрать последнюю</Btn>
+        <Btn color={C.mint} onClick={() => onSave(list.map((x) => ({ ...x, name: x.name.trim(), reward: x.reward.trim() })))} disabled={!ok}>Сохранить маршрут</Btn>
+      </div>
     </div>
   )
 }
